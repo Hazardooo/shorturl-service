@@ -107,3 +107,21 @@ docker compose --profile tools run --rm migrate alembic revision --autogenerate 
 docker compose exec fastapi alembic upgrade head
 
 ```
+
+---
+
+## 🧪 Тестирование
+
+### Автоматические тесты (Pytest)
+
+Запуск тестов внутри Docker-контейнера:
+
+```bash
+docker compose exec -e PYTHONPATH=. fastapi pytest
+```
+
+### Ручные тесты (.http файл)
+
+Для ручных тестов доступен файл `tests/test_main.http`.
+
+---
