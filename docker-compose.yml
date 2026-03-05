@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: shorturl-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+    volumes:
+      - ./alembic:/app/alembic
+      - ./src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: [ "tools" ]
+
+  fastapi:
+    container_name: shorturl-api
+    build: .
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    volumes:
+      - ./src:/app/src
+      - ./alembic:/app/alembic
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+      - PYTHONUNBUFFERED=1
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

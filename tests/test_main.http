@@ -1,0 +1,19 @@
+### 1. Создание ссылки
+POST http://127.0.0.1:8000/shorten
+Content-Type: application/json
+
+{
+  "original_url": "https://fastapi.tiangolo.com/"
+}
+
+> {%
+    client.global.set("response", response.body);
+%}
+
+### 2. Получение (теперь заработает!)
+GET http://127.0.0.1:8000{{response.short_id}}
+Accept: application/json
+
+### 3. Статистика
+GET http://127.0.0.1:8000/stats{{response.short_id}}
+Accept: application/json
